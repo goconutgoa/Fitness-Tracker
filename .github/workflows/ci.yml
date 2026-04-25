@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Ruff lint
+        run: ruff check src scripts
+
+      - name: Syntax check (all .py files)
+        run: python -m compileall -q src scripts
+
+      - name: Offline smoke test
+        env:
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_SERVICE_KEY: stub-service-key
+          JWT_SECRET: ci-jwt-secret-please-rotate
+          SESSION_SECRET: ci-session-secret-please-rotate
+          PUBLIC_BASE_URL: http://localhost:8080
+        run: python scripts/smoke.py
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: lint-and-smoke
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: fitness-nutrition-mcp:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
