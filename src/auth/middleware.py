@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from ..config import get_settings
 from ..context import current_user
 from .tokens import verify_access_token
 
@@ -43,12 +44,16 @@ class BearerAuthMiddleware:
 
 async def _unauthorized(send: Send) -> None:
     body = b'{"error":"invalid_token","error_description":"Missing or invalid bearer token"}'
+    # RFC 9728 §5.3: include the resource_metadata URL so clients can discover
+    # the authorization server even before a successful request.
+    resource_metadata_url = f"{get_settings().issuer}/.well-known/oauth-protected-resource"
+    www_auth = f'Bearer realm="mcp", resource_metadata="{resource_metadata_url}"'
     await send({
         "type": "http.response.start",
         "status": 401,
         "headers": [
             (b"content-type", b"application/json"),
-            (b"www-authenticate", b'Bearer realm="mcp"'),
+            (b"www-authenticate", www_auth.encode("ascii")),
             (b"content-length", str(len(body)).encode()),
         ],
     })

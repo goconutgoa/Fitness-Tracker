@@ -94,6 +94,21 @@ async def metadata(request: Request) -> JSONResponse:
     )
 
 
+async def protected_resource_metadata(request: Request) -> JSONResponse:
+    """RFC 9728 Protected Resource Metadata. Claude.ai's MCP connector probes
+    this to discover which OAuth authorization server protects the MCP
+    endpoint."""
+    s = get_settings()
+    return JSONResponse(
+        {
+            "resource": f"{s.issuer}/mcp",
+            "authorization_servers": [s.issuer],
+            "bearer_methods_supported": ["header"],
+            "scopes_supported": ["mcp"],
+        }
+    )
+
+
 async def register_client(request: Request) -> JSONResponse:
     try:
         body = await request.json()
@@ -378,6 +393,9 @@ def _issue_token_pair(user: dict, client_id: str, scope: str) -> JSONResponse:
 oauth_routes = [
     Route("/.well-known/oauth-authorization-server", metadata, methods=["GET"]),
     Route("/.well-known/openid-configuration", metadata, methods=["GET"]),
+    # RFC 9728 — clients may probe at the root or with the resource path suffix.
+    Route("/.well-known/oauth-protected-resource", protected_resource_metadata, methods=["GET"]),
+    Route("/.well-known/oauth-protected-resource/mcp", protected_resource_metadata, methods=["GET"]),
     Route("/oauth/register", register_client, methods=["POST"]),
     Route("/oauth/authorize", authorize, methods=["GET", "POST"]),
     Route("/oauth/token", token, methods=["POST"]),
