@@ -1,0 +1,45 @@
+---
+title: OAuth & Identity tables
+---
+erDiagram
+    app_users ||--o{ oauth_auth_codes      : "issues to"
+    app_users ||--o{ oauth_refresh_tokens  : "owns"
+    oauth_clients ||--o{ oauth_auth_codes      : "issued for"
+    oauth_clients ||--o{ oauth_refresh_tokens  : "issued for"
+
+    app_users {
+        uuid id PK "gen_random_uuid()"
+        text email UK "unique, lowercased index"
+        text password_hash "bcrypt $2b$..."
+        text timezone "IANA, default UTC"
+        timestamptz created_at
+        timestamptz last_login_at
+    }
+    oauth_clients {
+        text client_id PK "c_<base64url>"
+        text client_secret "NULL for public clients"
+        text client_name
+        text_array redirect_uris "RFC 7591"
+        text_array grant_types "default: code+refresh"
+        text token_endpoint_auth_method "default: none"
+        timestamptz created_at
+    }
+    oauth_auth_codes {
+        text code PK "single-use, 10-min TTL"
+        text client_id FK
+        uuid user_id FK
+        text redirect_uri "must match exchange"
+        text scope
+        text code_challenge "PKCE"
+        text code_challenge_method "S256 or plain"
+        timestamptz expires_at
+        boolean consumed "marked true on /token"
+    }
+    oauth_refresh_tokens {
+        text token PK "opaque 32-byte"
+        text client_id FK
+        uuid user_id FK
+        text scope
+        timestamptz expires_at "30 days"
+        boolean revoked "rotation flag"
+    }

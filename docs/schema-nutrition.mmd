@@ -1,0 +1,46 @@
+---
+title: Nutrition tables
+---
+erDiagram
+    app_users ||--o{ meals            : "logs"
+    app_users ||--o{ water_logs       : "logs"
+    app_users ||--|| nutrition_goals  : "has 1"
+
+    app_users {
+        uuid id PK
+        text email UK
+        text timezone "IANA"
+    }
+    meals {
+        uuid id PK
+        uuid user_id FK "ON DELETE CASCADE"
+        text name
+        text meal_type "breakfast/lunch/dinner/snack"
+        numeric calories
+        numeric protein_g
+        numeric carbs_g
+        numeric fat_g
+        numeric fiber_g
+        numeric sugar_g
+        numeric sodium_mg
+        text notes
+        timestamptz consumed_at "event time"
+        timestamptz created_at "insert time"
+    }
+    water_logs {
+        uuid id PK
+        uuid user_id FK
+        integer amount_ml "CHECK > 0"
+        timestamptz consumed_at
+        timestamptz created_at
+    }
+    nutrition_goals {
+        uuid user_id PK "1:1; PK is also FK to app_users"
+        numeric calories
+        numeric protein_g
+        numeric carbs_g
+        numeric fat_g
+        numeric fiber_g
+        integer water_ml
+        timestamptz updated_at
+    }

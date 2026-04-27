@@ -1,0 +1,90 @@
+---
+title: Fitness tables
+---
+erDiagram
+    app_users ||--o{ exercises        : "owns custom (user_id null = global)"
+    app_users ||--o{ workouts         : "performs"
+    app_users ||--o{ workout_sets     : "performs (denormalized)"
+    app_users ||--o{ cardio_sessions  : "logs"
+    app_users ||--o{ step_logs        : "logs daily"
+    app_users ||--o{ body_metrics     : "records"
+    app_users ||--|| fitness_goals    : "has 1"
+
+    workouts  ||--o{ workout_sets : "contains (CASCADE)"
+    exercises ||--o{ workout_sets : "logged as (SET NULL on delete)"
+
+    app_users {
+        uuid id PK
+        text email UK
+        text timezone
+    }
+    exercises {
+        uuid id PK
+        uuid user_id FK "NULL = global"
+        text name "Bench Press"
+        text category "strength/cardio/mobility"
+        text primary_muscle "chest/back/legs/..."
+        text equipment "barbell/dumbbell/..."
+        boolean is_custom
+    }
+    workouts {
+        uuid id PK
+        uuid user_id FK
+        text name "Push Day"
+        text notes
+        timestamptz started_at
+        timestamptz ended_at
+        integer duration_min
+    }
+    workout_sets {
+        uuid id PK
+        uuid workout_id FK
+        uuid user_id FK
+        text exercise_name "DENORMALIZED"
+        uuid exercise_id FK "nullable"
+        integer set_number
+        integer reps
+        numeric weight_kg
+        numeric rpe "1-10"
+        boolean is_warmup
+        text notes
+    }
+    cardio_sessions {
+        uuid id PK
+        uuid user_id FK
+        text activity "running/cycling/..."
+        numeric duration_min "CHECK > 0"
+        numeric distance_km
+        numeric calories
+        integer avg_heart_rate
+        integer max_heart_rate
+        timestamptz performed_at
+    }
+    step_logs {
+        uuid user_id PK "composite PK + FK"
+        date log_date PK "composite PK"
+        integer steps "CHECK >= 0"
+        numeric distance_km
+        numeric calories
+    }
+    body_metrics {
+        uuid id PK
+        uuid user_id FK
+        timestamptz measured_at
+        numeric weight_kg
+        numeric body_fat_pct
+        numeric waist_cm
+        numeric chest_cm
+        numeric arm_cm
+        numeric thigh_cm
+        integer resting_hr
+    }
+    fitness_goals {
+        uuid user_id PK "1:1; PK is also FK to app_users"
+        integer daily_steps
+        integer weekly_workouts
+        integer weekly_cardio_min
+        numeric weekly_volume_kg
+        numeric target_weight_kg
+        numeric target_body_fat_pct
+    }

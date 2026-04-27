@@ -1,0 +1,58 @@
+---
+title: Fitness + Nutrition MCP — Schema overview
+config:
+  theme: default
+  flowchart:
+    curve: basis
+    padding: 20
+---
+flowchart TB
+    classDef root      fill:#f59e0b,stroke:#92400e,color:#1f2937,stroke-width:2px,font-weight:bold
+    classDef auth      fill:#a78bfa,stroke:#5b21b6,color:#1f2937
+    classDef nutrition fill:#34d399,stroke:#065f46,color:#1f2937
+    classDef fitness   fill:#60a5fa,stroke:#1e40af,color:#1f2937
+    classDef goal      fill:#fbbf24,stroke:#92400e,color:#1f2937,stroke-dasharray: 3 3
+
+    AU["app_users<br/><i>id, email, password_hash, timezone</i>"]:::root
+
+    subgraph IDENTITY ["Identity & OAuth"]
+        OC["oauth_clients<br/><i>client_id, redirect_uris[]</i>"]:::auth
+        AC["oauth_auth_codes<br/><i>code, code_challenge, expires_at</i>"]:::auth
+        RT["oauth_refresh_tokens<br/><i>token, revoked, expires_at</i>"]:::auth
+    end
+
+    subgraph NUTRITION ["Nutrition"]
+        M["meals<br/><i>name, calories, macros, consumed_at</i>"]:::nutrition
+        WL["water_logs<br/><i>amount_ml, consumed_at</i>"]:::nutrition
+        NG["nutrition_goals<br/><i>1:1 — daily macro targets</i>"]:::goal
+    end
+
+    subgraph FITNESS ["Fitness"]
+        EX["exercises<br/><i>catalog: 28 global + user customs</i>"]:::fitness
+        W["workouts<br/><i>session: name, started_at</i>"]:::fitness
+        WS["workout_sets<br/><i>reps, weight_kg, rpe, exercise_name</i>"]:::fitness
+        CS["cardio_sessions<br/><i>activity, duration, distance</i>"]:::fitness
+        SL["step_logs<br/><i>composite PK: user_id + log_date</i>"]:::fitness
+        BM["body_metrics<br/><i>weight_kg, body_fat_pct, ...</i>"]:::fitness
+        FG["fitness_goals<br/><i>1:1 — steps/workouts/volume targets</i>"]:::goal
+    end
+
+    AU -->|"1:N"| AC
+    AU -->|"1:N"| RT
+    OC -->|"1:N"| AC
+    OC -->|"1:N"| RT
+
+    AU -->|"1:N"| M
+    AU -->|"1:N"| WL
+    AU -.->|"1:1"| NG
+
+    AU -->|"1:N (custom)"| EX
+    AU -->|"1:N"| W
+    AU -->|"1:N"| WS
+    AU -->|"1:N"| CS
+    AU -->|"1:N"| SL
+    AU -->|"1:N"| BM
+    AU -.->|"1:1"| FG
+
+    W  -->|"1:N parent/child"| WS
+    EX -.->|"FK nullable"| WS
