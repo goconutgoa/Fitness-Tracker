@@ -2,10 +2,32 @@
 streamable-HTTP at ``/mcp`` (see ``src/app.py``)."""
 from __future__ import annotations
 
-from mcp.server.fastmcp import FastMCP
+from urllib.parse import urlparse
 
+from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
+
+from .config import get_settings
 from .tools import fitness as fitness_tools
 from .tools import nutrition as nutrition_tools
+
+
+def _transport_security() -> TransportSecuritySettings:
+    """Whitelist the public hostname. FastMCP's default DNS-rebinding
+    guard only allows localhost/127.0.0.1, so any deployment behind a
+    real domain hits the guard and 421s."""
+    public = urlparse(get_settings().public_base_url)
+    host = public.netloc or public.path  # netloc is empty for bare hosts
+    allowed_hosts = ["localhost", "127.0.0.1", "localhost:8080", "127.0.0.1:8080"]
+    allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
+    if host:
+        allowed_hosts.append(host)
+        allowed_origins.append(f"{public.scheme or 'https'}://{host}")
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=allowed_hosts,
+        allowed_origins=allowed_origins,
+    )
 
 
 def build_mcp() -> FastMCP:
@@ -20,6 +42,7 @@ def build_mcp() -> FastMCP:
         ),
         stateless_http=True,
         streamable_http_path="/",   # outer mount at /mcp provides the prefix
+        transport_security=_transport_security(),
     )
     nutrition_tools.register(mcp)
     fitness_tools.register(mcp)

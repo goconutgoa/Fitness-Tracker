@@ -27,11 +27,14 @@ def issue_access_token(user_id: str, email: str, client_id: str | None = None) -
     s = get_settings()
     now = datetime.now(timezone.utc)
     exp = now + ACCESS_TTL
+    # Per MCP spec + RFC 8707, ``aud`` must be the canonical resource URL
+    # (the MCP endpoint) so that resource-server validators can confirm
+    # the token was minted for them. Claude.ai's connector is strict here.
     payload = {
         "sub": user_id,
         "email": email,
         "iss": s.issuer,
-        "aud": client_id or "mcp",
+        "aud": f"{s.issuer}/mcp",
         "iat": int(now.timestamp()),
         "exp": int(exp.timestamp()),
     }
