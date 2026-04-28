@@ -8,6 +8,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from .config import get_settings
+from .prompts import templates as prompt_templates
 from .tools import fitness as fitness_tools
 from .tools import nutrition as nutrition_tools
 
@@ -46,6 +47,7 @@ def build_mcp() -> FastMCP:
     )
     nutrition_tools.register(mcp)
     fitness_tools.register(mcp)
+    prompt_templates.register(mcp)
     return mcp
 
 

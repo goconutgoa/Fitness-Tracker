@@ -29,6 +29,13 @@ os.environ.setdefault("SESSION_SECRET", "smoke-test-session-secret-please-rotate
 os.environ.setdefault("PUBLIC_BASE_URL", "http://localhost:8080")
 
 
+EXPECTED_PROMPTS = {
+    "daily_nutrition_report",
+    "daily_fitness_report",
+    "weekly_review",
+    "meal_suggestion",
+}
+
 EXPECTED_TOOLS = {
     # nutrition
     "log_meal", "update_meal", "delete_meal",
@@ -106,6 +113,14 @@ async def main() -> None:
     if extra:
         print(f"  note: {len(extra)} extra tools registered: {sorted(extra)}")
     _ok(f"{len(names)} MCP tools registered (all expected present)")
+
+    # 1b. Prompts are registered
+    prompts = await mcp.list_prompts()
+    prompt_names = {p.name for p in prompts}
+    missing_p = EXPECTED_PROMPTS - prompt_names
+    if missing_p:
+        _fail(f"missing prompts: {sorted(missing_p)}")
+    _ok(f"{len(prompt_names)} MCP prompts registered (all expected present)")
 
     # 2. In-process ASGI probes via httpx
     try:

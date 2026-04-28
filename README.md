@@ -41,6 +41,17 @@ progression analytics.
   - Consistency streak (workouts or step-goal days)
   - Rolling N-day fitness summary
 
+### Predefined prompts (one-click reports)
+The MCP server also exposes **prompts** — Claude.ai shows them as quick-launch
+templates so you don't have to retype the same instructions every day:
+- **Daily nutrition report** — progress bars per macro, meals so far, time-of-day
+  aware suggestions, hydration check, three actionable tips.
+- **Daily fitness report** — workouts, sets/volume, cardio, steps, weekly-goal
+  progress, PR call-outs.
+- **Weekly review** — 7-day combined retrospective with deltas vs the prior
+  week, PR highlights, three focus goals for next week.
+- **Suggest a meal** — three meal ideas tuned to my remaining macro budget.
+
 ## Setup
 
 ### 1. Create a Supabase project
