@@ -11,6 +11,7 @@ from .config import get_settings
 from .prompts import templates as prompt_templates
 from .tools import fitness as fitness_tools
 from .tools import nutrition as nutrition_tools
+from .tools import workflows as workflow_tools
 
 
 def _transport_security() -> TransportSecuritySettings:
@@ -47,6 +48,7 @@ def build_mcp() -> FastMCP:
     )
     nutrition_tools.register(mcp)
     fitness_tools.register(mcp)
+    workflow_tools.register(mcp)
     prompt_templates.register(mcp)
     return mcp
 

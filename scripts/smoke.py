@@ -54,6 +54,9 @@ EXPECTED_TOOLS = {
     "set_fitness_goals", "get_fitness_goals", "get_fitness_progress",
     "get_exercise_history", "get_personal_records", "get_workout_trends",
     "get_workout_patterns", "get_consistency_streak", "get_fitness_summary",
+    # workflows (predefined-prompt tools, surface in Claude.ai's tools UI)
+    "daily_nutrition_report", "daily_fitness_report",
+    "weekly_review", "meal_suggestion",
 }
 
 
